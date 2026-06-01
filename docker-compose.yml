@@ -1,0 +1,160 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-catalog_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ./biblioteca-microservicios/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  identity-service:
+    build:
+      context: ./biblioteca-microservicios/mini-identity-api-dotnet-main/mini-identity-api-dotnet-main
+    environment:
+      ASPNETCORE_URLS: http://+:5132
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4173}
+      Jwt__Key: ${JWT_SECRET}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-catalog_db}
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${IDENTITY_PORT:-5132}:5132"
+
+  catalog-service:
+    build:
+      context: ./biblioteca-microservicios
+      dockerfile: catalog-service/Dockerfile
+    env_file:
+      - .env
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    environment:
+      PORT: 3002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-catalog_db}
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+      AUTH_SERVICE_URL: http://identity-service:5132
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4173}
+      AI_PROVIDER: ${AI_PROVIDER:-huggingface}
+      HF_API_TOKEN: ${HF_API_TOKEN:-}
+      HF_MODEL: ${HF_MODEL:-facebook/bart-large-mnli}
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      # Chat AI (conversational explanations) - optional
+      CHAT_PROVIDER: ${CHAT_PROVIDER:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      # Azure Service Bus - optional (falls back to RabbitMQ if not set)
+      AZURE_SERVICE_BUS_CONNECTION_STRING: ${AZURE_SERVICE_BUS_CONNECTION_STRING:-}
+      AZURE_SERVICE_BUS_QUEUE: ${AZURE_SERVICE_BUS_QUEUE:-library-logging-queue}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "${CATALOG_PORT:-3002}:3002"
+
+  chatbot-service:
+    build:
+      context: ./biblioteca-microservicios
+      dockerfile: chatbot-service/Dockerfile
+    env_file:
+      - .env
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    environment:
+      PORT: 3003
+      AUTH_SERVICE_URL: http://identity-service:5132
+      CATALOG_SERVICE_URL: http://catalog-service:3002
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4173,http://localhost:5173}
+      CHATBOT_PROVIDER: ${CHATBOT_PROVIDER:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.1-8b-instant}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-mistralai/mistral-7b-instruct:free}
+      OPENROUTER_REFERER: ${OPENROUTER_REFERER:-http://localhost:4173}
+      OPENROUTER_TITLE: ${OPENROUTER_TITLE:-Biblioteca U}
+      REDIS_URL: redis://redis:6379
+      CHATBOT_STREAM_NAME: ${CHATBOT_STREAM_NAME:-chatbot_events}
+      CHATBOT_STREAM_GROUP: ${CHATBOT_STREAM_GROUP:-chatbot_logger}
+    depends_on:
+      identity-service:
+        condition: service_started
+      catalog-service:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    ports:
+      - "${CHATBOT_PORT:-3003}:3003"
+
+  frontend:
+    build:
+      context: ./Biblioteca-Frontend
+      args:
+        VITE_AUTH_SERVICE_URL: ${VITE_AUTH_SERVICE_URL:-http://localhost:5132}
+        VITE_CATALOG_SERVICE_URL: ${VITE_CATALOG_SERVICE_URL:-http://localhost:3002}
+        VITE_CHATBOT_SERVICE_URL: ${VITE_CHATBOT_SERVICE_URL:-http://localhost:3003}
+    image: biblioteca-frontend:latest
+    depends_on:
+      - identity-service
+      - catalog-service
+      - chatbot-service
+    ports:
+      - "${FRONTEND_PORT:-4173}:80"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

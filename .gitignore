@@ -1,0 +1,31 @@
+# Node
+node_modules/
+npm-debug.log*
+.env
+.env.docker-verify
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup
+.git-biblioteca-frontend.bak/
+.git-microservicios.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Secrets / local config
+duckdns-token.txt
+*.local.json
+.aks-last-tag.txt
+.aks-managed-data-tag.txt

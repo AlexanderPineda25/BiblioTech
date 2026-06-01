@@ -1,0 +1,6 @@
+[submodule "Biblioteca-Frontend"]
+	path = Biblioteca-Frontend
+	url = https://github.com/AlexanderPineda25/biblioteca-frontend.git
+[submodule "biblioteca-microservicios"]
+	path = biblioteca-microservicios
+	url = https://github.com/AlexanderPineda25/biblioteca-microservicios.git

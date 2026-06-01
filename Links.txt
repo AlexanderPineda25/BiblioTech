@@ -1,0 +1,8 @@
+Repositorios
+
+https://github.com/AlexanderPineda25/biblioteca-microservicios
+https://github.com/AlexanderPineda25/biblioteca-frontend
+
+Deployment Azure
+
+https://portal.azure.com/#servicemenu/Microsoft_Azure_Resources/ResourceManager/browseAll
