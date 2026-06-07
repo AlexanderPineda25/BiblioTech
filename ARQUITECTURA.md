@@ -8,17 +8,214 @@
 
 ## Tabla de Contenidos
 
-1. [Resumen de Implementación](#1-resumen-de-implementación)
-2. [Principios SOLID](#2-principios-solid)
-3. [Patrones de Diseño](#3-patrones-de-diseño)
-4. [Frontend — Mejoras Específicas](#4-frontend--mejoras-específicas)
-5. [Backend .NET — Mejoras Específicas](#5-backend-net--mejoras-específicas)
-6. [Backend Node.js — Mejoras Específicas](#6-backend-nodejs--mejoras-específicas)
-7. [Cross-Cutting Concerns](#7-cross-cutting-concerns)
+1. [Arquitectura Empresarial y Cloud-Native](#1-arquitectura-empresarial-y-cloud-native)
+2. [Resumen de Implementación](#2-resumen-de-implementación)
+3. [Principios SOLID](#3-principios-solid)
+4. [Patrones de Diseño](#4-patrones-de-diseño)
+5. [Frontend — Mejoras Específicas](#5-frontend--mejoras-específicas)
+6. [Backend .NET — Mejoras Específicas](#6-backend-net--mejoras-específicas)
+7. [Backend Node.js — Mejoras Específicas](#7-backend-nodejs--mejoras-específicas)
+8. [Cross-Cutting Concerns](#8-cross-cutting-concerns)
+
+---
+## 1. Arquitectura Empresarial y Cloud-Native
+
+La solución BiblioTech fue diseñada siguiendo principios de arquitectura cloud-native, microservicios, desacoplamiento mediante mensajería asíncrona y observabilidad centralizada.
+
+La plataforma se despliega sobre Microsoft Azure utilizando Azure Kubernetes Service (AKS) como plataforma de orquestación de contenedores, permitiendo escalabilidad horizontal, alta disponibilidad y automatización de despliegues.
 
 ---
 
-## 1. Resumen de Implementación
+## 1.1 Cloud Infrastructure Architecture Diagram
+
+La siguiente arquitectura representa la infraestructura cloud donde operan los servicios de BiblioTech.
+
+![Cloud Infrastructure Architecture](./images/BiblioTech_Cloud_Infrastructure.png)
+
+### Componentes de Infraestructura
+
+| Componente                     | Propósito                          |
+| ------------------------------ | ---------------------------------- |
+| Azure Front Door               | Entrada principal y protección WAF |
+| Azure Kubernetes Service (AKS) | Orquestación de contenedores       |
+| Azure Container Registry       | Almacenamiento de imágenes Docker  |
+| Azure Key Vault                | Gestión de secretos y claves       |
+| Azure Database for PostgreSQL  | Persistencia de datos              |
+| Azure Cache for Redis          | Caché distribuido                  |
+| Azure Service Bus              | Comunicación asíncrona             |
+| Azure Monitor                  | Observabilidad y monitoreo         |
+
+### Características Arquitectónicas
+
+* Alta disponibilidad multi-zona.
+* Escalamiento automático mediante AKS.
+* Seguridad basada en Zero Trust.
+* Gestión centralizada de secretos.
+* Monitoreo y observabilidad end-to-end.
+* Preparada para despliegues Blue-Green.
+
+---
+
+## 1.2 Application Architecture Diagram (Cloud-Native Design)
+
+La arquitectura de aplicaciones sigue una estrategia de microservicios independientes con responsabilidades claramente delimitadas.
+
+![Application Architecture](./images/BiblioTech_Application_Architecture.png)
+
+### Frontend
+
+#### React 19
+
+Responsable de:
+
+* Gestión de catálogo.
+* Administración de usuarios.
+* Panel administrativo.
+* Chatbot inteligente.
+* Experiencia de usuario.
+
+---
+
+### Backend Services
+
+#### Identity Service (.NET 10)
+
+Funciones:
+
+* Autenticación JWT.
+* Gestión de usuarios.
+* Gestión de roles.
+* Refresh Tokens.
+* Seguridad y autorización.
+
+#### Catalog Service (Node.js)
+
+Funciones:
+
+* Gestión de libros.
+* Catálogo bibliográfico.
+* Recomendaciones.
+* CQRS.
+* Publicación de eventos.
+
+#### Chatbot Service (Node.js)
+
+Funciones:
+
+* Asistente virtual.
+* Recuperación contextual.
+* Integración con IA.
+* Recomendaciones inteligentes.
+
+---
+
+### Integración
+
+Los servicios se comunican mediante:
+
+* Azure Service Bus.
+* Redis Streams.
+* Eventos de dominio.
+* APIs REST.
+
+---
+
+### Capacidades Cloud-Native
+
+* CQRS.
+* Outbox Pattern.
+* Circuit Breaker.
+* Retry Policies.
+* Correlation IDs.
+* Distributed Logging.
+* Metrics Collection.
+* OpenAPI.
+
+---
+
+## 1.3 Data Architecture Diagram
+
+La arquitectura de datos describe el ciclo completo de almacenamiento, procesamiento y consumo de información.
+
+![Data Architecture](./images/BiblioTech_Data_Architecture.png)
+
+### Fuentes de Datos
+
+* Usuarios.
+* Roles.
+* Libros.
+* Préstamos.
+* Conversaciones del chatbot.
+* Servicios externos.
+* Modelos de IA.
+
+---
+
+### Persistencia Operacional
+
+#### PostgreSQL
+
+Bases de datos principales:
+
+* Users
+* Roles
+* Books
+* Loans
+* Notifications
+* Refresh Tokens
+
+---
+
+### Capa de Caché
+
+#### Redis
+
+Utilizado para:
+
+* Cache de consultas.
+* Redis Streams.
+* Optimización de rendimiento.
+* Sesiones distribuidas.
+
+---
+
+### Capa de Integración
+
+#### Azure Service Bus
+
+Permite:
+
+* Comunicación desacoplada.
+* Arquitectura orientada a eventos.
+* Publicación y consumo de eventos.
+* Integración entre microservicios.
+
+---
+
+### Analítica y Evolución Futura
+
+La arquitectura contempla una futura evolución hacia:
+
+* Data Warehouse.
+* Data Lake.
+* Dashboards ejecutivos.
+* Machine Learning.
+* Analítica avanzada.
+
+---
+
+### Gobierno y Seguridad
+
+La plataforma implementa:
+
+* RBAC.
+* Auditoría.
+* Data Governance.
+* Data Quality.
+* Backup & Recovery.
+* Gestión de Metadatos.
+
+## 2. Resumen de Implementación
 
 ### ✅ 27 patrones y principios implementados — 0 pendientes
 
@@ -54,7 +251,7 @@
 
 ---
 
-## 2. Principios SOLID
+## 3. Principios SOLID
 
 ### S — Single Responsibility Principle (SRP)
 
@@ -129,7 +326,7 @@
 
 ---
 
-## 3. Patrones de Diseño
+## 4. Patrones de Diseño
 
 ### Ya aplicados
 
@@ -160,7 +357,7 @@
 
 ---
 
-## 4. Frontend — Mejoras Específicas
+## 5. Frontend — Mejoras Específicas
 
 ### Arquitectura de Componentes
 
@@ -184,7 +381,7 @@
 
 ---
 
-## 5. Backend .NET — Mejoras Específicas
+## 6. Backend .NET — Mejoras Específicas
 
 ### Arquitectura y SOLID
 
@@ -206,7 +403,7 @@
 
 ---
 
-## 6. Backend Node.js — Mejoras Específicas
+## 7. Backend Node.js — Mejoras Específicas
 
 ### Catalog Service
 
@@ -231,7 +428,7 @@
 
 ---
 
-## 7. Cross-Cutting Concerns
+## 8. Cross-Cutting Concerns
 
 ### Seguridad
 
