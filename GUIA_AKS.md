@@ -1,6 +1,6 @@
 # Guia paso a paso: AKS en Azure Education
 
-Esta guia usa `Central US` y `Standard_D2s_v3`, porque esa combinacion ya te aparecio disponible para VM y suele funcionar mejor que `B2s` para un cluster AKS con ingress, PostgreSQL, RabbitMQ, Redis y tres APIs.
+Esta guia usa `Central US` y `Standard_B1s`, porque esa combinacion ya te aparecio disponible para VM y suele funcionar mejor que `B2s` para un cluster AKS con ingress, PostgreSQL, RabbitMQ, Redis y tres APIs.
 
 Objetivo:
 
@@ -84,8 +84,8 @@ Este entorno ya quedo desplegado y probado en Azure Education:
 ```powershell
 $RESOURCE_GROUP="rg-biblioteca-aks-edu"
 $AKS_NAME="aks-biblioteca-edu"
-$ACR_NAME="acrbiblioalex25"
-$ACR_LOGIN_SERVER="acrbiblioalex25.azurecr.io"
+$ACR_NAME="acrbibliotecaedu"
+$ACR_LOGIN_SERVER="acrbibliotecaedu.azurecr.io"
 $INGRESS_IP="52.158.169.2"
 $TAG="aks-20260522-031612"
 ```
@@ -102,7 +102,7 @@ https://bibliotechu.duckdns.org
 
 AKS consume credito principalmente por:
 
-- Nodos del cluster: `Standard_D2s_v3` mientras el cluster esta encendido.
+- Nodos del cluster: `Standard_B1s` mientras el cluster esta encendido.
 - Discos administrados para PVCs de PostgreSQL y Redis.
 - Public IP y Load Balancer del ingress.
 - Azure Container Registry Basic.
@@ -168,9 +168,9 @@ Usa nombres en minuscula para ACR. El nombre de ACR debe ser unico globalmente.
 .\azure\create-aks-education.ps1 `
   -ResourceGroup "rg-biblioteca-aks-edu" `
   -Location "centralus" `
-  -AcrName "acrbiblioalex25" `
+  -AcrName "acrbibliotecaedu" `
   -AksName "aks-biblioteca-edu" `
-  -NodeVmSize "Standard_D2s_v3" `
+  -NodeVmSize "Standard_B1s" `
   -NodeCount 1 `
   -InstallIngressNginx
 ```
@@ -186,7 +186,7 @@ Si Azure Education bloquea la region o la SKU, prueba:
 ```powershell
 az vm list-skus `
   --location centralus `
-  --size Standard_D2s_v3 `
+  --size Standard_B1s `
   --all `
   --output table
 ```
@@ -198,7 +198,7 @@ az vm list-skus `
 ```powershell
 $RESOURCE_GROUP="rg-biblioteca-aks-edu"
 $AKS_NAME="aks-biblioteca-edu"
-$ACR_NAME="acrbiblioalex25"
+$ACR_NAME="acrbibliotecaedu"
 $ACR_LOGIN_SERVER = az acr show -g $RESOURCE_GROUP -n $ACR_NAME --query loginServer -o tsv
 
 az aks get-credentials -g $RESOURCE_GROUP -n $AKS_NAME --overwrite-existing
@@ -590,8 +590,8 @@ Cada repo necesita estas variables:
 ```text
 AKS_RESOURCE_GROUP=rg-biblioteca-aks-edu
 AKS_CLUSTER_NAME=aks-biblioteca-edu
-ACR_NAME=acrbiblioalex25
-ACR_LOGIN_SERVER=acrbiblioalex25.azurecr.io
+ACR_NAME=acrbibliotecaedu
+ACR_LOGIN_SERVER=acrbibliotecaedu.azurecr.io
 PUBLIC_BASE_URL=http://52.158.169.2
 ```
 

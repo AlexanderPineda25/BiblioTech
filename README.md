@@ -218,7 +218,7 @@ El proyecto esta desplegado en Azure Kubernetes Service con dominio DuckDNS + SS
 | **Frontend** | `https://bibliotechu.duckdns.org` |
 | **APIs** | `https://bibliotechu.duckdns.org` |
 | **IP pública AKS** | `52.158.169.2` |
-| **ACR** | `acrbiblioalex25.azurecr.io` |
+| **ACR** | `acrbibliotecaedu.azurecr.io` |
 | **AKS** | `aks-biblioteca-edu` |
 | **Resource Group** | `rg-biblioteca-aks-edu` |
 | **SSL** | Let's Encrypt via cert-manager |
@@ -230,7 +230,7 @@ az login
 .\azure\create-aks-education.ps1 `
   -ResourceGroup "rg-biblioteca-aks-edu" `
   -Location "centralus" `
-  -AcrName "acrbiblioalex25" `
+  -AcrName "acrbibliotecaedu" `
   -AksName "aks-biblioteca-edu" `
   -NodeVmSize "Standard_D2s_v3" `
   -NodeCount 1 `

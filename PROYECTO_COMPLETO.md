@@ -420,14 +420,14 @@ Orquesta 7 contenedores:
 **URL actual:** `https://bibliotechu.duckdns.org`  
 **Cluster:** `aks-biblioteca-edu`  
 **Resource Group:** `rg-biblioteca-aks-edu`  
-**ACR:** `acrbiblioalex25.azurecr.io`
+**ACR:** `acrbibliotecaedu.azurecr.io`
 
 **Imágenes en ACR:**
 ```
-acrbiblioalex25.azurecr.io/biblioteca/identity-service
-acrbiblioalex25.azurecr.io/biblioteca/catalog-service
-acrbiblioalex25.azurecr.io/biblioteca/chatbot-service
-acrbiblioalex25.azurecr.io/biblioteca/frontend
+acrbibliotecaedu.azurecr.io/biblioteca/identity-service
+acrbibliotecaedu.azurecr.io/biblioteca/catalog-service
+acrbibliotecaedu.azurecr.io/biblioteca/chatbot-service
+acrbibliotecaedu.azurecr.io/biblioteca/frontend
 ```
 
 **Estructura Kustomize (Backend):**
@@ -551,7 +551,7 @@ Para actualizar el DNS después de reiniciar AKS:
 |---------|--------|-----|--------|
 | Resource Group | `rg-biblioteca-aks-edu` | — | Activo |
 | AKS Cluster | `aks-biblioteca-edu` | 1x Standard_D2s_v3, tier free | Activo |
-| ACR | `acrbiblioalex25` | Basic | Activo |
+| ACR | `acrbibliotecaedu` | Basic | Activo |
 | Azure Database for PostgreSQL | `pg-biblioteca-edu-alex25` | Flexible Server | Activo |
 | Azure Managed Redis | `redis-biblioteca-edu-alex25` | Standard C1 | Activo |
 | Azure Service Bus | `sb-biblioteca-edu-alex25` | Standard | Activo |
@@ -623,7 +623,7 @@ Los repositorios están separados, cada uno con su propio pipeline:
 1. Checkout del código
 2. Validación (lint + build)
 3. Build de imagen Docker
-4. Push a ACR (`acrbiblioalex25.azurecr.io/biblioteca/frontend`)
+4. Push a ACR (`acrbibliotecaedu.azurecr.io/biblioteca/frontend`)
 5. Actualización del deployment en AKS
 6. Rollback automático en caso de fallo del rollout
 7. Health check post-deploy (HTTP 200/302 en la URL pública)
