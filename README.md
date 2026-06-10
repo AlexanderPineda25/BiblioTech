@@ -21,10 +21,10 @@
 | --- | --- | ---: | --- |
 | **Frontend** | React 18, Vite, Tailwind, Nginx | 4173 | UI, login, catálogo, admin y widget de chatbot |
 | **Identity Service** | .NET 10.0 | 5132 | Autenticación, JWT, roles y permisos |
-| **Catalog Service** | Node.js 18, Express | 3002 | CRUD de libros, recomendador IA, eventos RabbitMQ |
+| **Catalog Service** | Node.js 18, Express | 3002 | CRUD de libros, recomendador IA, eventos Azure Service Bus |
 | **Chatbot Service** | Node.js 20, Express | 3003 | Chatbot IA con Gemini, Groq, OpenRouter y fallback |
 | **PostgreSQL** | 16 Alpine | 5432 | Persistencia: usuarios, libros, roles |
-| **RabbitMQ** | 3 Management Alpine | 5672, 15672 | Event broker para eventos del catálogo |
+| **Azure Service Bus** | Basic | 443 | Event broker para eventos del catálogo |
 | **Redis Streams** | 7 Alpine | 6379 | Event log para eventos del chatbot |
 
 **Integración de IA:**
@@ -133,7 +133,7 @@
 | **Identity Swagger** | http://localhost:5132/swagger | - |
 | **Catalog Health** | http://localhost:3002/api/catalog/health | - |
 | **Chatbot Health** | http://localhost:3003/api/chatbot/health | - |
-| **RabbitMQ Management** | http://localhost:15672 | guest / guest |
+| **Azure Service Bus** | Azure Portal | - |
 | **Redis CLI** | `docker compose exec -T redis redis-cli` | - |
 
 ---
@@ -144,7 +144,7 @@
 
 Levanta dependencias compartidas:
 ```powershell
-docker compose up -d postgres rabbitmq redis identity-service
+docker compose up -d postgres redis identity-service
 ```
 
 Luego ejecuta cada servicio:
@@ -217,7 +217,7 @@ El proyecto esta desplegado en Azure Kubernetes Service con dominio DuckDNS + SS
 | **Dominio** | `https://bibliotechu.duckdns.org` |
 | **Frontend** | `https://bibliotechu.duckdns.org` |
 | **APIs** | `https://bibliotechu.duckdns.org` |
-| **IP pública AKS** | `52.158.169.2` |
+| **IP pública AKS** | `172.169.130.237` |
 | **ACR** | `acrbibliotecaedu.azurecr.io` |
 | **AKS** | `aks-biblioteca-edu` |
 | **Resource Group** | `rg-biblioteca-aks-edu` |
@@ -232,7 +232,7 @@ az login
   -Location "centralus" `
   -AcrName "acrbibliotecaedu" `
   -AksName "aks-biblioteca-edu" `
-  -NodeVmSize "Standard_D2s_v3" `
+  -NodeVmSize "Standard_B2pls_v2" `
   -NodeCount 1 `
   -InstallIngressNginx
 ```

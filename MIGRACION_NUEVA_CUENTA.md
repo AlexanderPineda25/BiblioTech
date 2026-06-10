@@ -10,7 +10,7 @@ Migrar BiblioTech a una nueva suscripción Azure, manteniendo la arquitectura de
 
 | Recurso | Tier | Costo/mes | Nota |
 |---|---|---|---|
-| AKS | Free (1 node B1s) | $0 | 750h gratis/mes |
+| AKS | Free (1 node B2pls_v2) | $0 | 750h gratis/mes |
 | PostgreSQL | Flexible Server B1MS | $0 | 750h gratis/mes (12m) |
 | Service Bus | Basic | ~$0.05 | $0.05/millón operaciones |
 | ACR | Basic | $0 | 1 registro gratis (12m) |
@@ -24,14 +24,14 @@ Migrar BiblioTech a una nueva suscripción Azure, manteniendo la arquitectura de
 ## Arquitectura
 
 ```
-Standard_B1s (1 vCPU, 2GB RAM) — GRATIS
+Standard_B2pls_v2 (1 vCPU, 4GB RAM) — GRATIS
 ├── ingress-nginx (pod)
 ├── identity-service (pod)      ~150Mi
 ├── catalog-service (pod)       ~150Mi
 ├── chatbot-service (pod)       ~150Mi
 ├── redis (pod)                 ~80Mi
 └── system/k8s                  ~200Mi
-    Total: ~730Mi / 2048Mi ✓
+    Total: ~730Mi / 4096Mi ✓
 
 Azure Managed Services (FUERA de K8s)
 ├── PostgreSQL Flexible Server B1MS   GRATIS 12m
@@ -157,7 +157,7 @@ Reducir resources (líneas 36-42):
 ### 8. `biblioteca-microservicios/azure/create-aks-education.ps1`
 
 ```powershell
-[string]$NodeVmSize = "Standard_B1s"
+[string]$NodeVmSize = "Standard_B2pls_v2"
 ```
 
 ---
@@ -282,7 +282,7 @@ az acr create `
   --admin-enabled true
 ```
 
-### 6. Crear AKS con B1s (**GRATIS**)
+### 6. Crear AKS con B2pls_v2 (**GRATIS**)
 
 ```powershell
 az aks create `
@@ -290,7 +290,7 @@ az aks create `
   --name "aks-biblioteca-edu" `
   --location "centralus" `
   --node-count 1 `
-  --node-vm-size "Standard_B1s" `
+  --node-vm-size "Standard_B2pls_v2" `
   --tier free `
   --enable-managed-identity `
   --attach-acr "acrbibliotecaedu" `
@@ -523,7 +523,7 @@ Para cada repositorio:
 | 5 | `redis.yaml` | Maxmemory 64mb, resources reducidos, PVC 512Mi |
 | 6 | `configmap.yaml` | DB_HOST nuevo, REDIS_URL añadido |
 | 7 | `secret.template.yaml` | REDIS_URL a `redis://redis:6379` |
-| 8 | `create-aks-education.ps1` | VM size a Standard_B1s |
+| 8 | `create-aks-education.ps1` | VM size a Standard_B2pls_v2 |
 | 9 | `create-managed-services.ps1` | Quitada creación Redis, Service Bus a Basic |
 | 10 | `deploy-aks.ps1` | Bugfix: CORS_ORIGIN → CORS_ORIGINS |
 | 11 | `deploy-aks.ps1` | Bugfix: VITE_API_URL → VITE_AUTH/CATALOG/CHATBOT_URL |
@@ -535,8 +535,8 @@ Para cada repositorio:
 - **PostgreSQL B1MS es gratis por 12 meses** con Azure for Students
 - **Service Bus Basic** cobra ~$0.05/mes por operaciones mínimas
 - **Redis corre como pod** dentro del cluster — $0 extra
-- **AKS B1s es gratis por 12 meses** (750h/mes)
+- **AKS B2pls_v2 es gratis por 12 meses** (750h/mes)
 - **ACR Basic es gratis por 12 meses**
-- El B1s (1 vCPU, 2GB RAM) es suficiente para el proyecto con las optimizaciones de resources
+- El B2pls_v2 (1 vCPU, 4GB RAM) es suficiente para el proyecto con las optimizaciones de resources
 - Si no es suficiente, cambiar a B2s (~$15/mes extra) pero reduce cuánto dura el crédito
 - Los secrets de AI (Hugging Face, Gemini, Groq, OpenRouter) **no necesitan cambiarse**

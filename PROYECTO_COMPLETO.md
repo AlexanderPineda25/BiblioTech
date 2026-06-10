@@ -69,9 +69,9 @@ Las bibliotecas universitarias enfrentan múltiples desafíos: autenticación ce
 | Node.js / Express | 18 LTS / 20 LTS | Catalog & Chatbot Services |
 | PostgreSQL | 16 Alpine | Base de datos (local) |
 | Azure Database for PostgreSQL | Flexible Server | Base de datos (producción) |
-| Azure Managed Redis | Standard C1 | Streams de eventos (producción) |
+| Redis | 7 Alpine (in-cluster) | Streams de eventos (producción) |
 | Redis | 7 Alpine | Streams de eventos (local) |
-| RabbitMQ | 3 Management Alpine | Mensajería asíncrona (local) |
+| Azure Service Bus | Basic | Mensajería asíncrona (producción) |
 | Azure Service Bus | Standard | Mensajería asíncrona (producción) |
 | Docker / Docker Compose | Latest | Contenedores y orquestación local |
 | Kubernetes (AKS) | Latest | Orquestación en producción |
@@ -90,11 +90,11 @@ Las bibliotecas universitarias enfrentan múltiples desafíos: autenticación ce
 
 | Servicio | SKU | Propósito |
 |----------|-----|-----------|
-| AKS | 1 nodo Standard_D2s_v3 | Orquestación principal |
+| AKS | 1 nodo Standard_B2pls_v2 | Orquestación principal |
 | ACR | Basic | Registro de imágenes Docker |
 | Azure Database for PostgreSQL | Flexible Server | Base de datos gestionada |
-| Azure Managed Redis | Standard C1 | Cache y Streams de eventos |
-| Azure Service Bus | Standard | Mensajería asíncrona |
+| Redis | Pod in-cluster | Cache y Streams de eventos |
+| Azure Service Bus | Basic | Mensajería asíncrona |
 
 ---
 
@@ -128,8 +128,8 @@ Las bibliotecas universitarias enfrentan múltiples desafíos: autenticación ce
          │                    │                      │
          ▼                    ▼                      ▼
 ┌──────────────────┐   ┌───────────────────┐   ┌──────────────────┐
-│  Azure Service   │   │  Azure Managed    │   │   RabbitMQ       │
-│  Bus (prod)      │   │  Redis (prod)     │   │   (local only)   │
+│  Azure Service   │   │  Redis Streams    │   │   RabbitMQ       │
+│  Bus (prod)      │   │  (in-cluster)     │   │   (local only)   │
 │  library-logging │   │  chatbot_events   │   │                  │
 │  queue           │   │  Streams          │   │                  │
 └──────────────────┘   └───────────────────┘   └──────────────────┘
@@ -148,7 +148,7 @@ Las bibliotecas universitarias enfrentan múltiples desafíos: autenticación ce
 
 1. Usuario envía mensaje → `POST /api/chatbot/messages`
 2. Chatbot Service valida JWT contra Identity Service
-3. Publica evento `chat.message.received` en Azure Managed Redis Streams
+3. Publica evento `chat.message.received` en Redis Streams
 4. Obtiene contexto del catálogo desde Catalog Service
 5. Construye prompt y prueba proveedores en cadena:
    - **Gemini** → si falla → **Groq** → si falla → **OpenRouter** → si falla → **Local**
@@ -290,7 +290,7 @@ src/
 
 **Características:**
 - Cadena de proveedores IA con fallback automático: Gemini → Groq → OpenRouter → Local
-- Redis Streams (Azure Managed Redis en prod) para logging de eventos
+- Redis Streams (Redis in-cluster) para logging de eventos
 - Contexto del catálogo en tiempo real con `CatalogContextService` (token por request)
 - Validación JWT contra Identity Service
 - `AiProviderRegistry` con Strategy Pattern
@@ -332,7 +332,7 @@ El archivo `init.sql` contiene ~250+ libros que incluyen:
 | Componente | Local (Docker Compose) | Producción (AKS) |
 |-----------|----------------------|-------------------|
 | PostgreSQL | Contenedor `postgres:16-alpine` | Azure Database for PostgreSQL Flexible Server |
-| Redis | Contenedor `redis:7-alpine` | Azure Managed Redis Standard C1 |
+| Redis | Contenedor `redis:7-alpine` | Redis in-cluster pod |
 | Mensajería | RabbitMQ 3 Management | Azure Service Bus Standard |
 
 ---
@@ -354,7 +354,7 @@ El archivo `init.sql` contiene ~250+ libros que incluyen:
 - **Activo solo cuando `AZURE_SERVICE_BUS_CONNECTION_STRING` está vacío
 - **Uso:** Desarrollo local, mismo comportamiento que Service Bus
 
-### Azure Managed Redis Streams (Producción)
+### Redis Streams (in-cluster)
 
 - **Stream:** `chatbot_events`
 - **Host:** `redis-biblioteca-edu-alex25.centralus.redis.azure.net:10000` (TLS)
@@ -532,7 +532,7 @@ env:
 
 | Dominio | IP | Estado |
 |---------|----|--------|
-| `bibliotechu.duckdns.org` | `52.158.169.2` | ✅ Activo con SSL |
+| `bibliotechu.duckdns.org` | `172.169.130.237` | ✅ Activo con SSL |
 | Token DuckDNS | Configurado en `duckdns-token.txt` | ✅ No subir a Git |
 
 Para actualizar el DNS después de reiniciar AKS:
@@ -550,11 +550,11 @@ Para actualizar el DNS después de reiniciar AKS:
 | Recurso | Nombre | SKU | Estado |
 |---------|--------|-----|--------|
 | Resource Group | `rg-biblioteca-aks-edu` | — | Activo |
-| AKS Cluster | `aks-biblioteca-edu` | 1x Standard_D2s_v3, tier free | Activo |
+| AKS Cluster | `aks-biblioteca-edu` | 1x Standard_B2pls_v2, tier free | Activo |
 | ACR | `acrbibliotecaedu` | Basic | Activo |
-| Azure Database for PostgreSQL | `pg-biblioteca-edu-alex25` | Flexible Server | Activo |
-| Azure Managed Redis | `redis-biblioteca-edu-alex25` | Standard C1 | Activo |
-| Azure Service Bus | `sb-biblioteca-edu-alex25` | Standard | Activo |
+| Azure Database for PostgreSQL | `pg-biblioteca-edu` | Flexible Server | Activo |
+| Redis | `redis` (in-cluster pod) | N/A | Activo |
+| Azure Service Bus | `sb-biblioteca-edu-alex25` | Basic | Activo |
 
 ### Scripts de Automatización
 
@@ -576,11 +576,11 @@ Para actualizar el DNS después de reiniciar AKS:
 
 **ConfigMap de producción** (`k8s/base/configmap.yaml`):
 ```yaml
-DB_HOST: pg-biblioteca-edu-alex25.postgres.database.azure.com
+DB_HOST: pg-biblioteca-edu.postgres.database.azure.com
 DB_PORT: "5432"
 DB_SSL: "true"
 RABBITMQ_URL: ""  # Vacío = usa Azure Service Bus
-REDIS_URL: ""     # Se conecta via secret a Azure Managed Redis
+REDIS_URL: "redis://redis:6379"     # Redis in-cluster
 ```
 
 ### Gestión de Costos (Azure Education)
@@ -589,7 +589,7 @@ REDIS_URL: ""     # Se conecta via secret a Azure Managed Redis
 - Se inicia bajo demanda (`aks-start.ps1`)
 - ACR Basic es de bajo costo (~$5/mes)
 - Azure Database for PostgreSQL Flexible Server tiene costo (~$25/mes)
-- Azure Managed Redis Standard C1 tiene costo (~$30/mes)
+- Redis in-cluster no tiene costo extra
 - Azure Service Bus Standard tiene costo (~$10/mes)
 
 ---
@@ -648,11 +648,11 @@ Los repositorios están separados, cada uno con su propio pipeline:
 - **Dominio:** `https://bibliotechu.duckdns.org` con SSL/TLS via Let's Encrypt
 - **SSL/TLS:** cert-manager instalado + ClusterIssuer operativo + certificados emitidos y válidos
 - **HTTP→HTTPS:** Redirect 308 configurado en los ingress
-- **DuckDNS:** Token registrado, DNS actualizado a IP del ingress (`52.158.169.2`)
+- **DuckDNS:** Token registrado, DNS actualizado a IP del ingress (`172.169.130.237`)
 - **Repositorios separados:** Frontend y backend en repos independientes con CI/CD propio
 - **Azure Service Bus:** Implementado y desplegado como reemplazo de RabbitMQ en producción
 - **Azure Database for PostgreSQL:** En uso como base de datos gestionada
-- **Azure Managed Redis:** En uso para Streams de eventos del chatbot
+- **Redis (in-cluster):** En uso para Streams de eventos del chatbot
 - **Frontend:** Build exitoso, lint sin errores
 - **Backend:** Todos los servicios compilados y funcionando
 - **AKS:** Todos los pods en estado `Running (1/1)`
@@ -756,7 +756,7 @@ Ver [ARQUITECTURA.md](ARQUITECTURA.md) para el análisis detallado de **27 patro
 ├── Mensajería asíncrona (Azure Service Bus + Redis Streams)
 ├── Repositorios separados con CI/CD independiente
 ├── Azure Database for PostgreSQL Flexible Server
-├── Azure Managed Redis
+├── Redis (in-cluster pod)
 ├── SSL/TLS con Let's Encrypt y cert-manager
 ├── Scripts de automatización (managed services, rollback, DNS, cleanup)
 ├── CI/CD pipelines con health check, rollback automático e init DB

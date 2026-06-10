@@ -1,6 +1,6 @@
 # Guia paso a paso: AKS en Azure Education
 
-Esta guia usa `Central US` y `Standard_B1s`, porque esa combinacion ya te aparecio disponible para VM y suele funcionar mejor que `B2s` para un cluster AKS con ingress, PostgreSQL, RabbitMQ, Redis y tres APIs.
+Esta guia usa `Central US` y `Standard_B2pls_v2`, porque esa combinacion ya te aparecio disponible para VM y suele funcionar mejor que `B2s` para un cluster AKS con ingress, PostgreSQL, Redis Streams y tres APIs.
 
 Objetivo:
 
@@ -26,7 +26,6 @@ flowchart TB
       CAT["catalog-service"]
       CHAT["chatbot-service"]
       PG["postgres"]
-      RAB["rabbitmq"]
       REDIS["redis streams"]
     end
   end
@@ -40,7 +39,6 @@ flowchart TB
   Ingress --> CHAT
   ID --> PG
   CAT --> PG
-  CAT --> RAB
   CHAT --> ID
   CHAT --> CAT
   CHAT --> REDIS
@@ -86,7 +84,7 @@ $RESOURCE_GROUP="rg-biblioteca-aks-edu"
 $AKS_NAME="aks-biblioteca-edu"
 $ACR_NAME="acrbibliotecaedu"
 $ACR_LOGIN_SERVER="acrbibliotecaedu.azurecr.io"
-$INGRESS_IP="52.158.169.2"
+$INGRESS_IP="172.169.130.237"
 $TAG="aks-20260522-031612"
 ```
 
@@ -102,7 +100,7 @@ https://bibliotechu.duckdns.org
 
 AKS consume credito principalmente por:
 
-- Nodos del cluster: `Standard_B1s` mientras el cluster esta encendido.
+- Nodos del cluster: `Standard_B2pls_v2` mientras el cluster esta encendido.
 - Discos administrados para PVCs de PostgreSQL y Redis.
 - Public IP y Load Balancer del ingress.
 - Azure Container Registry Basic.
@@ -170,7 +168,7 @@ Usa nombres en minuscula para ACR. El nombre de ACR debe ser unico globalmente.
   -Location "centralus" `
   -AcrName "acrbibliotecaedu" `
   -AksName "aks-biblioteca-edu" `
-  -NodeVmSize "Standard_B1s" `
+  -NodeVmSize "Standard_B2pls_v2" `
   -NodeCount 1 `
   -InstallIngressNginx
 ```
@@ -186,7 +184,7 @@ Si Azure Education bloquea la region o la SKU, prueba:
 ```powershell
 az vm list-skus `
   --location centralus `
-  --size Standard_B1s `
+  --size Standard_B2pls_v2 `
   --all `
   --output table
 ```
@@ -592,7 +590,7 @@ AKS_RESOURCE_GROUP=rg-biblioteca-aks-edu
 AKS_CLUSTER_NAME=aks-biblioteca-edu
 ACR_NAME=acrbibliotecaedu
 ACR_LOGIN_SERVER=acrbibliotecaedu.azurecr.io
-PUBLIC_BASE_URL=http://52.158.169.2
+PUBLIC_BASE_URL=https://bibliotechu.duckdns.org
 ```
 
 Ambos repos necesitan este secret:
